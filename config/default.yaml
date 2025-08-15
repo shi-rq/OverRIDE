@@ -1,0 +1,23 @@
+# Dataset configuration
+dataset:
+  task: "math"  # Dataset name (directory under ./data)
+  split: "test"  # Split to use (test, train, etc.)
+
+# Engine configuration
+engine:
+  model: "Qwen/Qwen2.5-3B-Instruct"  # Model to use
+  n: 10  # Number of responses per prompt
+  top_p: 1.0
+  top_k: -1
+  min_p: 0.0
+  temperature: 0.6
+  max_tokens: 8192
+
+# Evaluator configuration
+evaluator:
+  pass_k: [1, 2, 5, 10, 20, 30, 50, 100]  # Pass-k values to evaluate
+  output_dir: "./results/default"  # Directory to save results
+
+# Main configuration
+main:
+  method: "baseline"  # Only baseline is supported for now 
