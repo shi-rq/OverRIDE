@@ -39,12 +39,13 @@ def default_compute_score(
         NotImplementedError: If the reward function is not implemented for the given data source.
     """
     if data_source == "openai/gsm8k":
-        from . import gsm8k
-
-        res = gsm8k.compute_score(solution_str, ground_truth)
+        # from . import gsm8k
+        # res = gsm8k.compute_score(solution_str, ground_truth)
+        from . import math
+        res = math.compute_score(solution_str, ground_truth, is_gsm8k=True)
+    
     elif data_source in ["lighteval/MATH", "DigitalLearningGmbH/MATH-lighteval", "HuggingFaceH4/MATH-500"]:
         from . import math
-
         res = math.compute_score(solution_str, ground_truth)
         # [Optional] Math-Verify Integration
         # For enhanced accuracy, consider utilizing Math-Verify (https://github.com/huggingface/Math-Verify).
@@ -53,14 +54,15 @@ def default_compute_score(
 
         # from . import math_verify
         # res = math_verify.compute_score(solution_str, ground_truth)
+    
     elif data_source == "openai/openai_humaneval":
         from . import humaneval
-
         res = humaneval.compute_score(solution_str, ground_truth)
+    
     elif data_source == "math_dapo" or data_source.startswith("aime"):
         from . import math_dapo
-
         res = math_dapo.compute_score(solution_str, ground_truth)
+    
     elif data_source in [
         "numina_aops_forum",
         "numina_synthetic_math",
@@ -70,8 +72,8 @@ def default_compute_score(
         "numina_olympiads",
     ]:
         from . import prime_math
-
         res = prime_math.compute_score(solution_str, ground_truth)
+    
     elif data_source in ["codecontests", "apps", "codeforces", "taco"]:
         # Use the passed sandbox_fusion_url if available
         if sandbox_fusion_url:
@@ -87,10 +89,11 @@ def default_compute_score(
 
             # Assuming prime_code doesn't need the URL
             res = prime_code.compute_score(solution_str, ground_truth, continuous=True)
+    
     elif data_source in ["hiyouga/geometry3k"]:
         from . import geo3k
-
         res = geo3k.compute_score(solution_str, ground_truth)
+    
     elif data_source in [
         "searchR1_nq",
         "searchR1_triviaqa",
@@ -101,7 +104,6 @@ def default_compute_score(
         "searchR1_bamboogle",
     ]:
         from . import search_r1_like_qa_em
-
         res = search_r1_like_qa_em.compute_score(solution_str, ground_truth)
 
     else:

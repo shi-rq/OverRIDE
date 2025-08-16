@@ -6,21 +6,21 @@ set -x
 
 # Config
 MODELS=(
-    # "Qwen/Qwen2.5-7B-Instruct"
-    # "Meta-llama/Llama-3.1-8B-Instruct"
-    # "Qwen/Qwen2.5-3B-Instruct"
-    # "Meta-llama/Llama-3.2-3B-Instruct"
-    # "Qwen/Qwen2.5-14B-Instruct"
+    "Qwen/Qwen2.5-7B-Instruct"
+    "Meta-llama/Llama-3.1-8B-Instruct"
+    "Qwen/Qwen2.5-3B-Instruct"
+    "Meta-llama/Llama-3.2-3B-Instruct"
+    "Qwen/Qwen2.5-14B-Instruct"
     # "Qwen/Qwen2.5-32B-Instruct"
     # "Qwen/Qwen2.5-72B-Instruct"
     # "google/gemma-3-4b-it"
     # "microsoft/Phi-4-mini-instruct"
     "mistralai/Mistral-7B-Instruct-v0.3"
-    "google/gemma-2-9b"
+    # "google/gemma-2-9b"
 )
 TASKS=(
-    "humaneval"
-    "math"
+    # "humaneval"
+    # "math"
     "gsm8k"
 )
 

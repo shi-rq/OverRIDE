@@ -14,10 +14,12 @@
 # Adapted from https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/tasks/hendrycks_math/utils.py
 
 
-def compute_score(solution_str, ground_truth) -> float:
+def compute_score(solution_str, ground_truth, is_gsm8k=False) -> float:
     retval = 0.0
     try:
         string_in_last_boxed = last_boxed_only_string(solution_str)
+        if is_gsm8k:
+            string_in_last_boxed = string_in_last_boxed.replace(",", "").replace("$", "")
         if string_in_last_boxed is not None:
             answer = remove_boxed(string_in_last_boxed)
             if is_equiv(answer, ground_truth):
