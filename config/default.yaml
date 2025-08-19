@@ -1,3 +1,7 @@
+# Main configuration
+main:
+  method: "baseline"
+
 # Dataset configuration
 dataset:
   task: "math"  # Dataset name (directory under ./data)
@@ -12,12 +16,15 @@ engine:
   min_p: 0.0
   temperature: 0.6
   max_tokens: 8192
+  gpu_memory_utilization: 0.5
+  override:
+    lambd: 0.8
+    num_iteration: 10
+    rank: 1024
+    batch_size: 32
+    learning_rate: 1e-6
 
 # Evaluator configuration
 evaluator:
   pass_k: [1, 2, 5, 10, 20, 30, 50, 100]  # Pass-k values to evaluate
   output_dir: "./results/default"  # Directory to save results
-
-# Main configuration
-main:
-  method: "baseline"  # Only baseline is supported for now 

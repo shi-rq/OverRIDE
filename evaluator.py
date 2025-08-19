@@ -57,38 +57,39 @@ class Evaluator:
         Returns:
             Dictionary mapping pass_k to accuracy scores
         """
-        # Get the number of responses per example
-        n = len(responses[0]) if responses else 0
-        
-        # Filter pass_k values that are <= n
-        valid_pass_k = [k for k in self.pass_k if k <= n]
-        
-        # Initialize results
+        round_num = len(responses[0]) if responses else 0
+        valid_pass_k = [k for k in self.pass_k if k <= round_num]
         pass_k_results = OrderedDict()
+        round_accuracies = OrderedDict()
+        scores = []
+
+        for i, example in enumerate(dataset):
+            example_responses = responses[i]
+            example_scores = []
+            for response in example_responses:
+                score = self._compute_score(example, response)
+                example_scores.append(score)
+            scores.append(example_scores)
         
         # Calculate pass-k accuracy for each valid k
         for k in valid_pass_k:
             correct_count = 0
-            total_count = len(dataset)
-            
-            for i, example in enumerate(dataset):
-                example_responses = responses[i][:k]  # Take first k responses
-                
-                # Check if any of the first k responses is correct
-                is_correct = False
-                for response in example_responses:
-                    score = self._compute_score(example, response)
-                    if score > 0:  # Assuming score > 0 means correct
-                        is_correct = True
-                        break
-                
-                if is_correct:
-                    correct_count += 1
-            
-            accuracy = correct_count / total_count if total_count > 0 else 0.0
+            for i, example_scores in enumerate(scores):
+                if k <= len(example_scores):
+                    correct_count += sum(example_scores[:k]) > 0
+            accuracy = correct_count / len(scores) if len(scores) > 0 else 0.0
             pass_k_results[f"pass_{k}"] = accuracy
         
-        return pass_k_results
+        # Calculate round accuracies
+        for round_idx in range(round_num):
+            round_scores = [example_scores[round_idx] for example_scores in scores]
+            round_accuracies[f"round_{round_idx}"] = sum(round_scores) / len(round_scores)
+        
+        return {
+            'scores': scores,
+            'pass_k_results': pass_k_results,
+            'round_accuracies': round_accuracies,
+        }
     
     def _compute_score(self, example: Dict[str, Any], response: str) -> float:
         """Compute score for a single response using default_compute_score.
@@ -116,63 +117,27 @@ class Evaluator:
             print(f"Error computing score: {e}")
             return 0.0
     
-    def calculate_pass_k_score(self, dataset, responses: List[List[str]]) -> List[Dict[str, float]]:
-        """Calculate pass-k score for each example.
-        
-        Args:
-            dataset: Dataset object containing examples
-            responses: List of lists, where each inner list contains responses for one example
-            
-        Returns:
-            List of dictionaries, where each dict contains pass-k scores for one example
-        """
-        pass_k_scores = []
-        
-        for i, example in enumerate(dataset):
-            example_responses = responses[i] if i < len(responses) else []
-            example_scores = {}
-            
-            # Calculate pass-k scores for this example
-            for k in self.pass_k:
-                if k <= len(example_responses):
-                    # Check if any of the first k responses is correct
-                    is_correct = False
-                    for response in example_responses[:k]:
-                        score = self._compute_score(example, response)
-                        if score > 0:  # Assuming score > 0 means correct
-                            is_correct = True
-                            break
-                    
-                    example_scores[f"pass_{k}"] = 1.0 if is_correct else 0.0
-                else:
-                    example_scores[f"pass_{k}"] = 0.0  # Not enough responses
-            
-            pass_k_scores.append(example_scores)
-        
-        return pass_k_scores
-    
-    def save_results(self, dataset, responses: List[List[str]], 
-                    pass_k_results: Dict[str, float], 
-                    pass_k_score: Optional[List[Dict[str, float]]] = None) -> str:
+    def save_results(self, dataset, responses: List[List[str]], results: Dict[str, Any]) -> str:
         """Save evaluation results to file.
         
         Args:
             dataset: Dataset object
             responses: List of response lists
-            pass_k_results: Pass-k accuracy results
-            pass_k_score: Optional pass-k score list (will be calculated if not provided)
+            results: Dictionary containing evaluation results
             
         Returns:
             Path to the saved file
         """
-        # Calculate pass_k_score if not provided
-        if pass_k_score is None:
-            pass_k_score = self.calculate_pass_k_score(dataset, responses)
         
         # Get dataset and model information for filename
         dataset_name = self.config_all.get('dataset', {}).get('task', 'unknown')
         model_path = self.config_all.get('engine', {}).get('model', 'unknown')
         model_name = model_path.split('/')[-1]  # Extract model name
+
+        # Get OverRIDE parameters from config
+        override_params = self.config_all.get('engine', {}).get('override', {})
+        lambd = override_params.get('lambd', 'unknown')
+        learning_rate = override_params.get('learning_rate', 'unknown')
         
         # Get engine parameters from config
         engine_config = self.config_all.get('engine', {})
@@ -190,9 +155,14 @@ class Evaluator:
             f"MP{min_p}",
             f"T{temperature}"
         ]
+
+        # Add override parameters to filename
+        if self.config_all['main']['method'] == 'override':
+            filename_parts.insert(2, f"LMD{lambd}")
+            filename_parts.insert(3, f"LR{learning_rate}")
         
         # Add pass-k accuracy to filename
-        for k, acc in pass_k_results.items():
+        for k, acc in results['pass_k_results'].items():
             k_value = k.split('_')[1]  # Extract number from "pass_k"
             filename_parts.append(f"{acc*100:.2f}%@{k_value}")
         
@@ -202,8 +172,9 @@ class Evaluator:
         # Prepare data to save
         results_data = {
             'results': [],
-            'pass_k_results': pass_k_results,
-            'config': self.config_all
+            'config': self.config_all,
+            'pass_k_results': results['pass_k_results'],
+            'round_accuracies': results['round_accuracies'],
         }
         
         # Add individual example results
@@ -211,7 +182,7 @@ class Evaluator:
             # Create a copy of the example and add responses and pass_k_score
             example_with_results = example.copy()
             example_with_results['responses'] = responses[i] if i < len(responses) else []
-            example_with_results['pass_k_score'] = pass_k_score[i] if i < len(pass_k_score) else {}
+            example_with_results['scores'] = results['scores'][i] if i < len(results['scores']) else []
             results_data['results'].append(example_with_results)
         
         # Save to file
