@@ -8,12 +8,10 @@ set -x
 MODELS=(
     # "meta-llama/Llama-3.2-3B-Instruct"
     # "Qwen/Qwen2.5-3B-Instruct"
-
-    # "Qwen/Qwen2.5-7B-Instruct"
+    "Qwen/Qwen2.5-7B-Instruct"
     "mistralai/Mistral-7B-Instruct-v0.3"
-    # "meta-llama/Llama-3.1-8B-Instruct"
-    # "Qwen/Qwen2.5-14B-Instruct"
-
+    "meta-llama/Llama-3.1-8B-Instruct"
+    "Qwen/Qwen2.5-14B-Instruct"
     # "Qwen/Qwen2.5-32B-Instruct"
     # "Qwen/Qwen2.5-72B-Instruct"
     # "google/gemma-3-4b-it"
@@ -21,10 +19,9 @@ MODELS=(
     # "google/gemma-2-9b"
 )
 TASKS=(
-    # "humaneval"
-    # "math"
-    # "gsm8k"
-    "ccnews"
+    "humaneval"
+    "math"
+    "gsm8k"
 )
 
 SAMPLE_NUM=10
@@ -32,7 +29,7 @@ TOPP=0.9
 TOPK=20
 MINP=0.05
 
-LAMBDA=0.4
+LAMBDA=0.8
 LR=1e-3
 
 GPU_ID=0

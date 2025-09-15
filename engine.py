@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import time
 
 from typing import Dict, Any, List, Optional
 from vllm import LLM, SamplingParams
@@ -52,6 +53,7 @@ class Engine:
             gpu_memory_utilization=config.get('gpu_memory_utilization', 0.6),
             max_model_len=config.get('max_model_len', 8192),
             trust_remote_code=True,
+            tensor_parallel_size=config.get('tensor_parallel_size', 1),
         )
         if os.getenv('USE_OVERRIDE', 'false').lower() == 'true':
             self.set_reweighting_params_rpc(self.reweighting_params)
@@ -94,6 +96,10 @@ class Engine:
     
     def set_reweighting_params_rpc(self, reweighting_params: OverRIDEParams):
         def set_reweighting_params(executor):
+            print(executor.model_runner.model.__class__)  # print name of the model
+            # check if there are overridden functions
+            print(f"has update_reweighting_head: {hasattr(executor.model_runner.model.logits_processor, 'update_reweighting_head')}")
+            print(f"has set_reweighting_head: {hasattr(executor.model_runner.model.logits_processor, 'set_reweighting_head')}")
             executor.model_runner.model.logits_processor.set_reweighting_params(reweighting_params)
         self.llm.collective_rpc(set_reweighting_params)
     
@@ -172,6 +178,42 @@ class Engine:
         return responses
     
     def generate_responses_override(self, prompts: List[str], n: Optional[int] = None) -> List[List[str]]:
+        """Generate responses for given prompts with override.
+        
+        Args:
+            prompts: List of input prompts
+            n: Number of responses per prompt (overrides config if provided)
+        
+        Returns:
+            List of lists, where each inner list contains n responses for the corresponding prompt
+        """
+        # Create sampling params for this generation
+        if n is not None:
+            sampling_params = SamplingParams(
+                n=n,
+                top_p=self.sampling_params.top_p,
+                top_k=self.sampling_params.top_k,
+                min_p=self.sampling_params.min_p,
+                temperature=self.sampling_params.temperature,
+                max_tokens=self.sampling_params.max_tokens,
+            )
+        else:
+            sampling_params = self.sampling_params
+        
+        # Generate responses
+        outputs = self.llm.generate(prompts, sampling_params)
+        
+        # Extract responses
+        responses = []
+        for output in outputs:
+            prompt_responses = []
+            for sample in output.outputs:
+                prompt_responses.append(sample.text)
+            responses.append(prompt_responses)
+        
+        return responses
+    
+    def generate_responses_override_sequential(self, prompts: List[str], n: Optional[int] = None) -> List[List[str]]:
         """Generate responses for given prompts with override.
         
         Args:

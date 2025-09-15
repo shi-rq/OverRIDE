@@ -16,13 +16,14 @@ engine:
   min_p: 0.0
   temperature: 0.6
   max_tokens: 8192
-  gpu_memory_utilization: 0.5
+  gpu_memory_utilization: 0.8
+  tensor_parallel_size: 1
   override:
     lambd: 0.8
     num_iteration: 10
-    rank: 1024
+    rank: 16
     batch_size: 32
-    learning_rate: 1e-6
+    learning_rate: 1e-3
 
 # Evaluator configuration
 evaluator:

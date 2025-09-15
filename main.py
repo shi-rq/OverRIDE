@@ -9,6 +9,10 @@ if os.getenv('USE_OVERRIDE', 'false').lower() == 'true':
     import vllm.model_executor.layers.logits_processor as logits_processor_module
     from modeling import OverRIDELogitsProcessor
     logits_processor_module.LogitsProcessor = OverRIDELogitsProcessor
+    import vllm.v1.worker.gpu_model_runner as gpu_model_runner_module
+    from gpu_model_runner import GPUModelRunnerForOverRIDE
+    gpu_model_runner_module.GPUModelRunner = GPUModelRunnerForOverRIDE
+
 
 @hydra.main(config_path="config", config_name="default", version_base=None)
 def main(cfg: DictConfig) -> None:
@@ -47,6 +51,8 @@ def main(cfg: DictConfig) -> None:
         responses = engine.generate_responses_sequential(prompts)
     elif method == 'override':
         responses = engine.generate_responses_override(prompts)
+    elif method == 'override-sequential':
+        responses = engine.generate_responses_override_sequential(prompts)
     else:
         raise NotImplementedError(f"Method `{method}` is not implemented.")
     
