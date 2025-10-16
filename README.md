@@ -14,7 +14,7 @@ conda activate override
 pip install -r requirements.txt
 ```
 
-## 💾 Data
+## 📚 Data
 
 Use the following commands to download the data:
 
