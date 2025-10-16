@@ -1,8 +1,6 @@
 import hydra
 import os
-
 from omegaconf import DictConfig, OmegaConf
-from typing import Dict, Any
 
 # Check environment variable for OverRIDE monkey patch
 if os.getenv('USE_OVERRIDE', 'false').lower() == 'true':
@@ -47,12 +45,8 @@ def main(cfg: DictConfig) -> None:
     method = config.get('main', {}).get('method', 'baseline')
     if method == 'baseline':
         responses = engine.generate_responses(prompts)
-    elif method == 'baseline-sequential':
-        responses = engine.generate_responses_sequential(prompts)
     elif method == 'override':
         responses = engine.generate_responses_override(prompts)
-    elif method == 'override-sequential':
-        responses = engine.generate_responses_override_sequential(prompts)
     else:
         raise NotImplementedError(f"Method `{method}` is not implemented.")
     

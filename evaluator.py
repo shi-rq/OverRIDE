@@ -1,8 +1,9 @@
 import json
 import os
+import time
+
 from typing import Dict, Any, List, Optional
 from collections import OrderedDict
-from omegaconf import OmegaConf
 from utils.score import default_compute_score
 
 
@@ -138,6 +139,7 @@ class Evaluator:
         override_params = self.config_all.get('engine', {}).get('override', {})
         lambd = override_params.get('lambd', 'unknown')
         learning_rate = override_params.get('learning_rate', 'unknown')
+        rank = override_params.get('rank', 'unknown')
         
         # Get engine parameters from config
         engine_config = self.config_all.get('engine', {})
@@ -160,11 +162,15 @@ class Evaluator:
         if self.config_all['main']['method'] == 'override':
             filename_parts.insert(2, f"LMD{lambd}")
             filename_parts.insert(3, f"LR{learning_rate}")
+            filename_parts.insert(4, f"R{rank}")
         
         # Add pass-k accuracy to filename
-        for k, acc in results['pass_k_results'].items():
-            k_value = k.split('_')[1]  # Extract number from "pass_k"
-            filename_parts.append(f"{acc*100:.2f}%@{k_value}")
+        if dataset_name in ['ccnews']:
+            filename_parts.append(time.strftime("%Y%m%d_%H%M%S"))
+        else:
+            for k, acc in results['pass_k_results'].items():
+                k_value = k.split('_')[1]  # Extract number from "pass_k"
+                filename_parts.append(f"{acc*100:.2f}%@{k_value}")
         
         filename = "_".join(filename_parts) + ".json"
         filepath = os.path.join(self.output_dir, filename)

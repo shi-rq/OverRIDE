@@ -1,12 +1,6 @@
 import os
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-import time
-
 from typing import Dict, Any, List, Optional
 from vllm import LLM, SamplingParams
-from tqdm import tqdm
 
 from modeling import OverRIDEParams
 
@@ -58,7 +52,7 @@ class Engine:
         if os.getenv('USE_OVERRIDE', 'false').lower() == 'true':
             self.set_reweighting_params_rpc(self.reweighting_params)
     
-    def format_prompts(self, messages: List[Dict[str, str]]) -> List[str]:
+    def format_prompts(self, messages) -> List[str]:
         """Format messages into prompts using chat template.
         
         Args:
@@ -67,6 +61,11 @@ class Engine:
         Returns:
             List of formatted prompts
         """
+        # If not in chat template format, directly use the string list
+        if not isinstance(messages[0], list):
+            print(f"Messages are not in chat template format, directly use the string list")
+            return messages
+
         tokenizer = self.llm.get_tokenizer()
         
         prompts = []
@@ -155,28 +154,6 @@ class Engine:
         
         return responses
     
-    def generate_responses_sequential(self, prompts: List[str], n: Optional[int] = None) -> List[List[str]]:
-        """Generate responses for given prompts sequentially.
-        
-        Args:
-            prompts: List of input prompts
-            n: Number of responses per prompt (overrides config if provided)
-        
-        Returns:
-            List of lists, where each inner list contains n responses for the corresponding prompt
-        """
-        if n is None:
-            n = self.config.get('n', 1)
-        
-        responses = [[] for _ in range(len(prompts))]
-        
-        for _ in tqdm(range(n), desc="Generating responses sequentially"):
-            outputs = self.llm.generate(prompts, self.sampling_params_sequential)
-            for i, output in enumerate(outputs):
-                responses[i].append(output.outputs[0].text)
-        
-        return responses
-    
     def generate_responses_override(self, prompts: List[str], n: Optional[int] = None) -> List[List[str]]:
         """Generate responses for given prompts with override.
         
@@ -212,76 +189,3 @@ class Engine:
             responses.append(prompt_responses)
         
         return responses
-    
-    def generate_responses_override_sequential(self, prompts: List[str], n: Optional[int] = None) -> List[List[str]]:
-        """Generate responses for given prompts with override.
-        
-        Args:
-            prompts: List of input prompts
-            n: Number of responses per prompt (overrides config if provided)
-        
-        Returns:
-            List of lists, where each inner list contains n responses for the corresponding prompt
-        """
-        if n is None:
-            n = self.config.get('n', 1)
-        responses = [[] for _ in range(len(prompts))]
-
-        training_time = 0.0
-        loss_list_iteration = []
-        for itr in tqdm(range(n), desc="Generating responses sequentially"):
-            iteration = itr + 1
-            self.set_reweighting_head_rpc(iteration)
-            outputs = self.llm.generate(prompts, self.sampling_params_sequential)
-            for i, output in enumerate(outputs):
-                responses[i].append(output.outputs[0].text)
-            # self.update_reweighting_head_rpc()
-            training_time, loss_list = self.reset_training_rpc()
-            loss_list_iteration.append(loss_list)
-
-        print(f"Total training time: {training_time:.4f} seconds")
-        self.plot_loss_list(loss_list_iteration)
-        return responses
-    
-    def plot_loss_list(self, loss_list_iteration: List[List[float]]):
-        """Plot loss trends across different iterations.
-        
-        Args:
-            loss_list_iteration: List of loss lists for each iteration
-        """
-        # Create figure and axis
-        plt.figure(figsize=(10, 6))
-        
-        # Plot loss for each iteration
-        for i, loss_list in enumerate(loss_list_iteration):
-            plt.plot(loss_list[:700], label=f'Iteration {i+1}', alpha=0.7)
-        
-        # Calculate mean and standard deviation for y-axis limits using numpy
-        all_losses = []
-        for loss_list in loss_list_iteration:
-            all_losses.extend(loss_list[:700])
-        
-        all_losses = np.array(all_losses)
-        mean_loss = np.mean(all_losses)
-        std_loss = np.std(all_losses)
-        
-        # Set y-axis limits to mean ± 2*std
-        y_min = mean_loss - 2 * std_loss
-        y_max = mean_loss + 2 * std_loss
-        plt.ylim(y_min, y_max)
-        
-        # Set labels and title
-        plt.xlabel('Training Steps')
-        plt.ylabel('Loss')
-        title = f'Loss Trends - λ={self.reweighting_params.lambd}, lr={self.reweighting_params.learning_rate}'
-        plt.title(title)
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        
-        # Save the plot
-        filename = f'./results/figs/loss_lambda-{self.reweighting_params.lambd}_lr-{self.reweighting_params.learning_rate}.png'
-        os.makedirs('./results/figs', exist_ok=True)
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        print(f"Loss plot saved to: {filename}")

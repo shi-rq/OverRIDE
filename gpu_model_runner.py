@@ -136,7 +136,7 @@ class GPUModelRunnerForOverRIDE(GPUModelRunner):
         if hasattr(self.model.logits_processor, 'reweighting_heads'):
             request_ids = self.input_batch.req_ids
             num_tokens_per_request = [scheduler_output.num_scheduled_tokens[req_id] for req_id in request_ids]
-            logits = self.model.logits_processor(
+            logits, q_logits_next, q_indices = self.model.logits_processor(
                 self.model.lm_head,
                 sample_hidden_states,
                 None,
@@ -146,6 +146,8 @@ class GPUModelRunnerForOverRIDE(GPUModelRunner):
             )
         else:
             logits = self.model.compute_logits(sample_hidden_states, None)
+            q_logits_next = None
+            q_indices = None
 
         # Apply structured output bitmasks if present
         if scheduler_output.grammar_bitmask is not None:
@@ -215,6 +217,10 @@ class GPUModelRunnerForOverRIDE(GPUModelRunner):
 
         # Get the valid generated tokens.
         sampled_token_ids = sampler_output.sampled_token_ids
+        # Update reweighting head
+        if q_logits_next is not None and q_indices is not None:
+            self.model.logits_processor.update_reweighting_head(q_logits_next, sampled_token_ids, q_indices)
+
         max_gen_len = sampled_token_ids.shape[-1]
         if max_gen_len == 1:
             # No spec decode tokens.

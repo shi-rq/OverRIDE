@@ -2,20 +2,17 @@
 clear
 set -x
 
-# Test throughput of the model
-
-# Config
 MODELS=(
-    # "Qwen/Qwen2.5-3B-Instruct"
-    # "Qwen/Qwen2.5-7B-Instruct"
-    # "Qwen/Qwen2.5-14B-Instruct"
-    # "Qwen/Qwen2.5-32B-Instruct"
+    "Qwen/Qwen2.5-3B-Instruct"
+    "Qwen/Qwen2.5-7B-Instruct"
+    "Qwen/Qwen2.5-14B-Instruct"
+    "Qwen/Qwen2.5-32B-Instruct"
     "Qwen/Qwen2.5-72B-Instruct"
 )
 TASKS=(
-    # "humaneval"
     "math"
-    # "gsm8k"
+    "humaneval"
+    "gsm8k"
 )
 
 SAMPLE_NUM=10
@@ -43,7 +40,11 @@ for MODEL in "${MODELS[@]}"; do
             engine.temperature=0.6 \
             engine.tensor_parallel_size=$(echo $GPU_ID | awk -F',' '{print NF}') \
             evaluator.output_dir="./results/throughput"
-        
+    done
+done
+
+for MODEL in "${MODELS[@]}"; do
+    for TASK in "${TASKS[@]}"; do
         echo "Running OverRIDE Topp=$TOPP evaluation with T=0.6: Model=$MODEL, Task=$TASK"
         USE_OVERRIDE=true CUDA_VISIBLE_DEVICES=$GPU_ID python main.py \
             --config-path=config \

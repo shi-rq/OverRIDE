@@ -1,0 +1,31 @@
+# Main configuration
+main:
+  method: "baseline"
+
+# Dataset configuration
+dataset:
+  task: "math"  # Dataset name (directory under ./data)
+  split: "test"  # Split to use (test, train, etc.)
+
+# Engine configuration
+engine:
+  model: "Qwen/Qwen2.5-3B-Instruct"  # Model to use
+  n: 10  # Number of responses per prompt
+  top_p: 1.0
+  top_k: -1
+  min_p: 0.0
+  temperature: 0.6
+  max_tokens: 256
+  gpu_memory_utilization: 0.8
+  tensor_parallel_size: 1
+  override:
+    lambd: 0.8
+    num_iteration: 10
+    rank: 16
+    batch_size: 32
+    learning_rate: 1e-3
+
+# Evaluator configuration
+evaluator:
+  pass_k: [1, 2, 5, 10, 20, 30, 50, 100]  # Pass-k values to evaluate
+  output_dir: "./results/default"  # Directory to save results

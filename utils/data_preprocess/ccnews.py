@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--local_dir", default="./data/ccnews")
     parser.add_argument("--hdfs_dir", default=None)
-    parser.add_argument("--tokenizer", default="Qwen/Qwen2.5-7B-Instruct")
+    parser.add_argument("--tokenizer", default="Qwen/Qwen3-Embedding-8B")
     parser.add_argument("--prompt_token_length", type=int, default=32)
     parser.add_argument("--response_token_length", type=int, default=256)
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
             data = {
                 "data_source": data_source,
-                "prompt": [{"role": "user", "content": question}],
+                "prompt": question,
                 "reward_model": {"style": "rule", "ground_truth": solution},
                 "extra_info": {"split": split, "index": idx, "title": title, "description": description},
             }
