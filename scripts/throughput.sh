@@ -11,8 +11,6 @@ MODELS=(
 )
 TASKS=(
     "math"
-    "humaneval"
-    "gsm8k"
 )
 
 SAMPLE_NUM=10
@@ -23,9 +21,10 @@ MINP=0.05
 LAMBDA=0.8
 LR=1e-3
 
-GPU_ID=0,1,2,3,4,5,6,7
+GPU_ID=0,1,2,3,4,5,6,7  # Change this to the GPU IDs you want to use
 
 
+# Baseline
 for MODEL in "${MODELS[@]}"; do
     for TASK in "${TASKS[@]}"; do
         echo "Running Baseline Topp=$TOPP evaluation with T=0.6: Model=$MODEL, Task=$TASK"
@@ -43,6 +42,7 @@ for MODEL in "${MODELS[@]}"; do
     done
 done
 
+# OverRIDE
 for MODEL in "${MODELS[@]}"; do
     for TASK in "${TASKS[@]}"; do
         echo "Running OverRIDE Topp=$TOPP evaluation with T=0.6: Model=$MODEL, Task=$TASK"
