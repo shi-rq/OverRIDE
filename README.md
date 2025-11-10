@@ -29,6 +29,8 @@ The corresponding data will be saved in the `data` folder.
 
 ## 🚀 Evaluation
 
+Adjust the config at `config/default.yaml` based on your device settings.
+
 Use the following scripts to conduct the corresponding experiments:
 
 ```bash
