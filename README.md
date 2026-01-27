@@ -1,6 +1,6 @@
 # OverRIDE: Diverse Text Decoding via Iterative Reweighting
 
-The source code for Diverse Text Decoding via Iterative Reweighting (OverRIDE).
+Official repository for the paper "Diverse Text Decoding via Iterative Reweighting" (ICLR 2026).
 
 ![Intro](Intro.png)
 
