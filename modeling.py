@@ -1,23 +1,21 @@
 import json
+from typing import Optional
+from dataclasses import dataclass
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dataclasses import dataclass
-from typing import Optional
-
 # LogitsProcessor
-from vllm.model_executor.layers.logits_processor import LogitsProcessor, _prune_hidden_states, _apply_logits_processors
+from vllm.model_executor.layers.logits_processor import LogitsProcessor
 from vllm.model_executor.layers.vocab_parallel_embedding import VocabParallelEmbedding
-from vllm.model_executor.sampling_metadata import SamplingMetadata
 
 @dataclass
 class OverRIDEParams:
     """Parameters for OverRIDE reweighting mechanism"""
-    lambd: float = 50.0
+    lambd: float = 0.4
     num_iteration: int = 10
     rank: int = 16
-    batch_size: int = 256
     learning_rate: float = 1e-3
 
 
@@ -132,7 +130,7 @@ class OverRIDELogitsProcessor(LogitsProcessor):
         self,
         lm_head: VocabParallelEmbedding,
         hidden_states: torch.Tensor,
-        sampling_metadata: Optional[SamplingMetadata] = None,
+        sampling_metadata = None,
         embedding_bias: Optional[torch.Tensor] = None,
         request_ids: Optional[list] = None,
         num_tokens_per_request: Optional[list] = None,
@@ -143,10 +141,6 @@ class OverRIDELogitsProcessor(LogitsProcessor):
         if self.logits_as_input:
             logits = hidden_states
         else:
-            if sampling_metadata is not None:
-                hidden_states = _prune_hidden_states(hidden_states,
-                                                     sampling_metadata)
-
             logits = self._get_logits(hidden_states, lm_head, embedding_bias)
             if (self.reweighting_heads is not None and 
                 request_ids is not None and 
@@ -166,11 +160,6 @@ class OverRIDELogitsProcessor(LogitsProcessor):
 
             if self.scale != 1.0:
                 logits *= self.scale
-
-            # Apply logits processors (if any).
-            if sampling_metadata is not None and \
-                sampling_metadata.seq_groups is not None:
-                logits = _apply_logits_processors(logits, sampling_metadata)
 
         if q_logits_next is None:
             return logits

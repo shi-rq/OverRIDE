@@ -22,7 +22,6 @@ engine:
     lambd: 0.8
     num_iteration: 10
     rank: 16
-    batch_size: 32
     learning_rate: 1e-3
 
 # Evaluator configuration

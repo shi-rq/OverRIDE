@@ -4,6 +4,10 @@ from vllm import LLM, SamplingParams
 
 from modeling import OverRIDEParams
 
+# Allow insecure serialization for V1 engine's collective_rpc
+# This is needed to pass functions via collective_rpc in V1
+os.environ['VLLM_ALLOW_INSECURE_SERIALIZATION'] = '1'
+
 
 class Engine:
     def __init__(self, config: Dict[str, Any]):
@@ -37,7 +41,6 @@ class Engine:
             lambd=self.config_override.get('lambd', 0.8),
             num_iteration=self.config_override.get('num_iteration', 10),
             rank=self.config_override.get('rank', 1024),
-            batch_size=self.config_override.get('batch_size', 32),
             learning_rate=self.config_override.get('learning_rate', 1e-6),
         )
 

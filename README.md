@@ -4,6 +4,16 @@ Official repository for the paper "Diverse Text Decoding via Iterative Reweighti
 
 ![Intro](Intro.png)
 
+## 📢 Updates
+
+We have updated the code to support vLLM v0.11.1. This version of vLLM supports recording several key metrics during offline inference. For details, please refer to [this pull request](https://github.com/vllm-project/vllm/pull/12644) and [this pull request](https://github.com/vllm-project/vllm/pull/24947). Accordingly, we have modified `gpu_model_runner.py` and `modeling.py` to adapt to the new v1 engine.
+
+For the original implementation of OverRIDE using vLLM v0.8.5.post1, please switch to the `vllm-0.8.5.post1` branch:
+
+```bash
+git checkout vllm-0.8.5.post1
+```
+
 ## 🔧 Environment
 
 Use the following commands to create a conda environment:
