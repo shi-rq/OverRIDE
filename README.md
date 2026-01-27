@@ -1,6 +1,6 @@
 # OverRIDE: Diverse Text Decoding via Iterative Reweighting
 
-Official repository for the paper "Diverse Text Decoding via Iterative Reweighting" (ICLR 2026).
+[ICLR 2026] Official repository for the paper "Diverse Text Decoding via Iterative Reweighting".
 
 ![Intro](Intro.png)
 
