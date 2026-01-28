@@ -1,3 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+#
+# Copyright 2026 Ruiqi Shi
+#
+# This file has been modified by Ruiqi Shi to support OverRIDE: Diverse Text Decoding via Iterative Reweighting.
+# The original file is from the vLLM project.
+
 from typing import TYPE_CHECKING, Optional, Union
 import torch
 

@@ -50,3 +50,11 @@ bash scripts/throughput.sh
 - `utils/`: Utility functions for preprocessing data and scoring responses. These files are modified from [verl](https://github.com/volcengine/verl).
 
 > ⚠️ All modifications are based on the [vLLM v1 engine](https://docs.vllm.ai/en/stable/usage/v1_guide.html). You may encounter issues when implementing on specific models (e.g., Gemma2, whose `lm_head` implementation is different) or decoding methods (e.g., speculative decoding).
+
+## 🙏 Acknowledgments
+
+This project is based on [vLLM](https://github.com/vllm-project/vllm) and [verl](https://github.com/verl-project/verl), licensed under Apache 2.0.
+
+We thank the contributors of these projects for their excellent work.
+
+<!-- ## 📜 Citation -->
